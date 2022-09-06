@@ -33,6 +33,7 @@ class ThreadTest {
          thread.start();
 
         // thread의 작업이 완료될 때까지 기다린다.
+        // thread가 죽을 때까지 기다린다.
          thread.join();
     }
 
@@ -63,6 +64,7 @@ class ThreadTest {
         @Override
         public void run() {
             log.info(message);
+            log.info("Extends Thread class");
         }
     }
 
@@ -77,6 +79,7 @@ class ThreadTest {
         @Override
         public void run() {
             log.info(message);
+            log.info("Implements Runnable class");
         }
     }
 }
