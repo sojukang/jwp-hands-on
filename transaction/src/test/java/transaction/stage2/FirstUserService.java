@@ -42,7 +42,7 @@ public class FirstUserService {
 
         final var secondTransactionName = secondUserService.saveSecondTransactionWithRequired();
 
-        return of(firstTransactionName, secondTransactionName);
+        return getTransactionNamesNonNull(firstTransactionName, secondTransactionName);
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
@@ -53,7 +53,7 @@ public class FirstUserService {
 
         final var secondTransactionName = secondUserService.saveSecondTransactionWithRequiresNew();
 
-        return of(firstTransactionName, secondTransactionName);
+        return getTransactionNamesNonNull(firstTransactionName, secondTransactionName);
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
@@ -66,7 +66,7 @@ public class FirstUserService {
         throw new RuntimeException();
     }
 
-//    @Transactional(propagation = Propagation.REQUIRED)
+   // @Transactional(propagation = Propagation.REQUIRED)
     public Set<String> saveFirstTransactionWithSupports() {
         final var firstTransactionName = TransactionSynchronizationManager.getCurrentTransactionName();
         userRepository.save(User.createTest());
@@ -74,10 +74,10 @@ public class FirstUserService {
 
         final var secondTransactionName = secondUserService.saveSecondTransactionWithSupports();
 
-        return of(firstTransactionName, secondTransactionName);
+        return getTransactionNamesNonNull(firstTransactionName, secondTransactionName);
     }
 
-//    @Transactional(propagation = Propagation.REQUIRED)
+   @Transactional(propagation = Propagation.REQUIRED)
     public Set<String> saveFirstTransactionWithMandatory() {
         final var firstTransactionName = TransactionSynchronizationManager.getCurrentTransactionName();
         userRepository.save(User.createTest());
@@ -85,7 +85,7 @@ public class FirstUserService {
 
         final var secondTransactionName = secondUserService.saveSecondTransactionWithMandatory();
 
-        return of(firstTransactionName, secondTransactionName);
+        return getTransactionNamesNonNull(firstTransactionName, secondTransactionName);
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
@@ -96,10 +96,10 @@ public class FirstUserService {
 
         final var secondTransactionName = secondUserService.saveSecondTransactionWithNotSupported();
 
-        return of(firstTransactionName, secondTransactionName);
+        return getTransactionNamesNonNull(firstTransactionName, secondTransactionName);
     }
 
-    @Transactional(propagation = Propagation.REQUIRED)
+    // @Transactional(propagation = Propagation.REQUIRED)
     public Set<String> saveFirstTransactionWithNested() {
         final var firstTransactionName = TransactionSynchronizationManager.getCurrentTransactionName();
         userRepository.save(User.createTest());
@@ -107,10 +107,10 @@ public class FirstUserService {
 
         final var secondTransactionName = secondUserService.saveSecondTransactionWithNested();
 
-        return of(firstTransactionName, secondTransactionName);
+        return getTransactionNamesNonNull(firstTransactionName, secondTransactionName);
     }
 
-    @Transactional(propagation = Propagation.REQUIRED)
+    // @Transactional(propagation = Propagation.REQUIRED)
     public Set<String> saveFirstTransactionWithNever() {
         final var firstTransactionName = TransactionSynchronizationManager.getCurrentTransactionName();
         userRepository.save(User.createTest());
@@ -118,10 +118,10 @@ public class FirstUserService {
 
         final var secondTransactionName = secondUserService.saveSecondTransactionWithNever();
 
-        return of(firstTransactionName, secondTransactionName);
+        return getTransactionNamesNonNull(firstTransactionName, secondTransactionName);
     }
 
-    private Set<String> of(final String firstTransactionName, final String secondTransactionName) {
+    private Set<String> getTransactionNamesNonNull(final String firstTransactionName, final String secondTransactionName) {
         return Stream.of(firstTransactionName, secondTransactionName)
                 .filter(transactionName -> !Objects.isNull(transactionName))
                 .collect(Collectors.toSet());

@@ -1,7 +1,13 @@
 package transaction.stage1;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import static org.assertj.core.api.Assertions.*;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
+
+import javax.sql.DataSource;
+
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -10,15 +16,12 @@ import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerImageName;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
 import transaction.DatabasePopulatorUtils;
 import transaction.RunnableWrapper;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.concurrent.TimeUnit;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * 격리 레벨(Isolation Level)에 따라 여러 사용자가 동시에 db에 접근했을 때 어떤 문제가 발생하는지 확인해보자.
@@ -44,6 +47,25 @@ class Stage1Test {
     private static final Logger log = LoggerFactory.getLogger(Stage1Test.class);
     private DataSource dataSource;
     private UserDao userDao;
+
+    private static DataSource createMySQLDataSource(final JdbcDatabaseContainer<?> container) {
+        final var config = new HikariConfig();
+        config.setJdbcUrl(container.getJdbcUrl());
+        config.setUsername(container.getUsername());
+        config.setPassword(container.getPassword());
+        config.setDriverClassName(container.getDriverClassName());
+        return new HikariDataSource(config);
+    }
+
+    private static DataSource createH2DataSource() {
+        final var jdbcDataSource = new JdbcDataSource();
+        // h2 로그를 확인하고 싶을 때 사용
+        jdbcDataSource.setUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;TRACE_LEVEL_SYSTEM_OUT=3;MODE=MYSQL");
+        jdbcDataSource.setUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=MYSQL;");
+        jdbcDataSource.setUser("sa");
+        jdbcDataSource.setPassword("");
+        return jdbcDataSource;
+    }
 
     private void setUp(final DataSource dataSource) {
         this.dataSource = dataSource;
@@ -146,8 +168,6 @@ class Stage1Test {
         final int isolationLevel = Connection.TRANSACTION_REPEATABLE_READ;
         // final int isolationLevel = Connection.TRANSACTION_SERIALIZABLE;
 
-
-
         // 트랜잭션 격리 레벨을 설정한다.
         connection.setTransactionIsolation(isolationLevel);
 
@@ -190,16 +210,16 @@ class Stage1Test {
      * Isolation level  |
      * -----------------|--------------
      * Read Uncommitted | +
-     * Read Committed   |
-     * Repeatable Read  |
-     * Serializable     |
+     * Read Committed   | +
+     * Repeatable Read  | +
+     * Serializable     | -
      */
     @Test
     void phantomReading() throws SQLException {
 
         // testcontainer로 docker를 실행해서 mysql에 연결한다.
         final var mysql = new MySQLContainer<>(DockerImageName.parse("mysql:8.0.30"))
-                .withLogConsumer(new Slf4jLogConsumer(log));
+            .withLogConsumer(new Slf4jLogConsumer(log));
         mysql.start();
         setUp(createMySQLDataSource(mysql));
 
@@ -257,28 +277,9 @@ class Stage1Test {
         mysql.close();
     }
 
-    private static DataSource createMySQLDataSource(final JdbcDatabaseContainer<?> container) {
-        final var config = new HikariConfig();
-        config.setJdbcUrl(container.getJdbcUrl());
-        config.setUsername(container.getUsername());
-        config.setPassword(container.getPassword());
-        config.setDriverClassName(container.getDriverClassName());
-        return new HikariDataSource(config);
-    }
-
-    private static DataSource createH2DataSource() {
-        final var jdbcDataSource = new JdbcDataSource();
-        // h2 로그를 확인하고 싶을 때 사용
-//        jdbcDataSource.setUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;TRACE_LEVEL_SYSTEM_OUT=3;MODE=MYSQL");
-        jdbcDataSource.setUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=MYSQL;");
-        jdbcDataSource.setUser("sa");
-        jdbcDataSource.setPassword("");
-        return jdbcDataSource;
-    }
-
     private void sleep(double seconds) {
         try {
-            TimeUnit.MILLISECONDS.sleep((long) (seconds * 1000));
+            TimeUnit.MILLISECONDS.sleep((long)(seconds * 1000));
         } catch (InterruptedException ignored) {
         }
     }
