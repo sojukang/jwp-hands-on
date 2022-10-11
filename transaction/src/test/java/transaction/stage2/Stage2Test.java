@@ -92,7 +92,6 @@ class Stage2Test {
         // 부모 메서드가 non-transactional 이고 여기서 supports 설정 된 method 를 호출할 경우
         // current transaction 을 형성하는데, 이 transaction 은 transaction synchronization 상태라서
         // 자원에 기반하지 않는다. 반면에 Required 나 Required_new 인 경우 자원에 기반하는 실제 transaction 을 수행할 수 있다.
-        // actualTransaction 은 존재하는데, currentTransaction 은 존재하지 않는다고 한다.
         // 부모 트랜잭션이 존재할 경우 참여한다 -> 하나의 논리적 트랜잭션에 포함된다.
         final var actual = firstUserService.saveFirstTransactionWithSupports();
 

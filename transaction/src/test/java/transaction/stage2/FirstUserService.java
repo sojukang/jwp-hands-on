@@ -66,7 +66,7 @@ public class FirstUserService {
         throw new RuntimeException();
     }
 
-   // @Transactional(propagation = Propagation.REQUIRED)
+   @Transactional(propagation = Propagation.REQUIRED)
     public Set<String> saveFirstTransactionWithSupports() {
         final var firstTransactionName = TransactionSynchronizationManager.getCurrentTransactionName();
         userRepository.save(User.createTest());
