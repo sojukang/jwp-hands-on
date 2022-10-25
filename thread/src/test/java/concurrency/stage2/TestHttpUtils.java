@@ -9,15 +9,17 @@ import java.time.Duration;
 
 public class TestHttpUtils {
 
+    private static final int CONNECTION_TIMEOUT = 1200;
+
     private static final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
-            .connectTimeout(Duration.ofSeconds(1))
+            .connectTimeout(Duration.ofMillis(CONNECTION_TIMEOUT))
             .build();
 
     public static HttpResponse<String> send(final String path) {
         final var request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:8080" + path))
-                .timeout(Duration.ofSeconds(1))
+                .timeout(Duration.ofMillis(CONNECTION_TIMEOUT))
                 .build();
 
         try {
